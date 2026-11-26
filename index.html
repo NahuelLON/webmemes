@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Memes de la comunidad</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #1b1b2f; color: white; margin: 0; }
+    header { text-align: center; padding: 30px 20px; background: #6a4cff; }
+    main { max-width: 900px; margin: 20px auto; padding: 0 20px; }
+    section { background: #26263f; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    input[type=text], input[type=file] { display: block; margin: 10px 0; padding: 8px; width: 100%; box-sizing: border-box; }
+    button { background: #6a4cff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+    button:disabled { opacity: 0.5; }
+    #galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    #galeria img { width: 100%; border-radius: 8px; }
+    .oculto { position: absolute; left: -9999px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>😂 Memes de la comunidad</h1>
+    <p>Sube tu meme y, si lo aprueban, aparecerá aquí.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Sube tu meme</h2>
+      <form id="formulario">
+        <input type="text" id="autor" placeholder="Tu nombre o usuario (opcional)" maxlength="40">
+        <input type="file" id="meme" accept="image/png,image/jpeg,image/gif,image/webp" required>
+        <input type="text" id="web" class="oculto" tabindex="-1" autocomplete="off">
+        <button type="submit" id="enviar">Enviar meme</button>
+        <p id="estado"></p>
+      </form>
+    </section>
+
+    <section>
+      <h2>Galería</h2>
+      <div id="galeria"></div>
+    </section>
+  </main>
+
+  <script>
+    // ---- FASE 1: GALERÍA ----
+    // Cuando apruebes un meme, sube la imagen a una carpeta "memes"
+    // y añade su nombre a esta lista.
+    const memesAprobados = [
+      // "meme1.jpg",
+      // "meme2.png",
+    ];
+
+    const galeria = document.getElementById("galeria");
+    if (memesAprobados.length === 0) {
+      galeria.textContent = "Aún no hay memes aprobados.";
+    }
+    memesAprobados.forEach(function (nombre) {
+      const img = document.createElement("img");
+      img.src = "memes/" + nombre;
+      img.alt = "Meme";
+      galeria.appendChild(img);
+    });
+
+    // ---- FASE 2: FORMULARIO DE SUBIDA ----
+    const formulario = document.getElementById("formulario");
+    const estado = document.getElementById("estado");
+    const boton = document.getElementById("enviar");
+
+    formulario.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const archivo = document.getElementById("meme").files[0];
+      if (!archivo) return;
+      if (archivo.size > 5 * 1024 * 1024) {
+        estado.textContent = "La imagen pesa más de 5 MB.";
+        return;
+      }
+
+      const datos = new FormData();
+      datos.append("meme", archivo);
+      datos.append("autor", document.getElementById("autor").value);
+      datos.append("web", document.getElementById("web").value);
+
+      boton.disabled = true;
+      estado.textContent = "Enviando...";
+
+      try {
+        const respuesta = await fetch("/api/subir", { method: "POST", body: datos });
+        const resultado = await respuesta.json();
+        if (respuesta.ok) {
+          estado.textContent = "¡Enviado! Un moderador lo revisará.";
+          formulario.reset();
+        } else {
+          estado.textContent = resultado.error || "No se pudo enviar.";
+        }
+      } catch (error) {
+        estado.textContent = "Error de conexión. Inténtalo otra vez.";
+      }
+      boton.disabled = false;
+    });
+  </script>
+</body>
+</html>
