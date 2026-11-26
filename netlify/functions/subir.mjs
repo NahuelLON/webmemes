@@ -66,7 +66,9 @@ export default async (req) => {
       }
     );
 
-    if (!respuesta.ok) {
+        if (!respuesta.ok) {
+      const detalle = await respuesta.text();
+      console.log("Discord respondió", respuesta.status, detalle);
       return responder({ error: "Discord rechazó el envío." }, 502);
     }
     return responder({ ok: true });
