@@ -20,7 +20,7 @@ export default async (req) => {
   try {
     const form = await req.formData();
 
-    // Campo trampa para bots: si viene relleno, fingimos que todo va bien.
+    // Campo trampa para bots
     if (form.get("web")) return responder({ ok: true });
 
     const archivo = form.get("meme");
@@ -36,20 +36,35 @@ export default async (req) => {
       return responder({ error: "La imagen pesa más de 5 MB." }, 400);
     }
 
+    const botones = [
+      {
+        type: 1,
+        components: [
+          { type: 2, style: 3, label: "Aprobar", emoji: { name: "✅" }, custom_id: "aprobar" },
+          { type: 2, style: 4, label: "Rechazar", emoji: { name: "❌" }, custom_id: "rechazar" },
+        ],
+      },
+    ];
+
     const envio = new FormData();
     envio.append(
       "payload_json",
       JSON.stringify({
         content: "Nuevo meme de **" + autor + "**",
-        allowed_mentions: { parse: [] }, // evita que alguien haga @everyone
+        allowed_mentions: { parse: [] },
+        components: botones,
       })
     );
     envio.append("files[0]", archivo, "meme." + TIPOS[archivo.type]);
 
-    const respuesta = await fetch(process.env.DISCORD_WEBHOOK_URL, {
-      method: "POST",
-      body: envio,
-    });
+    const respuesta = await fetch(
+      "https://discord.com/api/v10/channels/" + process.env.CANAL_MODERACION_ID + "/messages",
+      {
+        method: "POST",
+        headers: { Authorization: "Bot " + process.env.DISCORD_BOT_TOKEN },
+        body: envio,
+      }
+    );
 
     if (!respuesta.ok) {
       return responder({ error: "Discord rechazó el envío." }, 502);
