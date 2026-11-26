@@ -57,18 +57,19 @@ export default async (req) => {
     );
     envio.append("files[0]", archivo, "meme." + TIPOS[archivo.type]);
 
-        const canalId = String(process.env.CANAL_MODERACION_ID || "").trim().split("/").pop();
+    const canalId = String(process.env.CANAL_MODERACION_ID || "").trim().split("/").pop();
     console.log("Canal usado:", canalId);
+
     const respuesta = await fetch(
       "https://discord.com/api/v10/channels/" + canalId + "/messages",
-      
+      {
         method: "POST",
         headers: { Authorization: "Bot " + process.env.DISCORD_BOT_TOKEN },
         body: envio,
       }
     );
 
-        if (!respuesta.ok) {
+    if (!respuesta.ok) {
       const detalle = await respuesta.text();
       console.log("Discord respondió", respuesta.status, detalle);
       return responder({ error: "Discord rechazó el envío." }, 502);
