@@ -57,9 +57,11 @@ export default async (req) => {
     );
     envio.append("files[0]", archivo, "meme." + TIPOS[archivo.type]);
 
+        const canalId = String(process.env.CANAL_MODERACION_ID || "").trim().split("/").pop();
+    console.log("Canal usado:", canalId);
     const respuesta = await fetch(
-      "https://discord.com/api/v10/channels/" + process.env.CANAL_MODERACION_ID + "/messages",
-      {
+      "https://discord.com/api/v10/channels/" + canalId + "/messages",
+      
         method: "POST",
         headers: { Authorization: "Bot " + process.env.DISCORD_BOT_TOKEN },
         body: envio,
